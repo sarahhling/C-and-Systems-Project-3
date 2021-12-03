@@ -77,10 +77,10 @@ struct climate_info {
     char code[3];
     unsigned long num_records;
     long sum_temp;
-    long max_temp;
-    long min_temp;
-    char* max_temp_time;
+    double max_temp;
+    double min_temp;
     char* min_temp_time;
+    char* max_temp_time;
     unsigned long sum_humidity;
     unsigned long sum_strikes;
     unsigned long sum_snow;
@@ -96,17 +96,17 @@ double KtoF(double K);
 int main() 
 {
 
-    char files[1][20] = {"data_wa_smaller.tdv"};
+    char files[1][20] = {"data_multi.tdv"};
     /* TODO: fix this conditional. You should be able to read multiple files. */
     /*Program must read at least 1 file*/
 
     /* Let's create an array to store our state data in. As we know, there are
      * 50 US states. */
     struct climate_info *states[NUM_STATES] = { NULL };
-
     for (int i = 0; i < 1; ++i) {
         /* TODO: Open the file for reading */
         FILE* fileptr = fopen(files[i], "r");
+
         printf("Opening file: %s\n", files[i]);
 
         /* TODO: If the file doesn't exist, print an error message and move on
@@ -119,7 +119,7 @@ int main()
 
             /* TODO: Analyze the file */
             analyze_file(fileptr, states, NUM_STATES); 
-            
+
             //closes file to free memory
             fclose(fileptr);
         }
@@ -127,6 +127,7 @@ int main()
 
     /* Now that we have recorded data for each file, we'll summarize them: */
     print_report(states, NUM_STATES);
+
     return 0;
 }
 
@@ -135,7 +136,9 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
     char line[line_sz];
     char* rest;
     char* token;
+
     while (fgets(line, line_sz, file) != NULL) {
+
       rest = line;
       token = strtok_r(NULL, " \t\n", &rest); //getting code
       char* temp_time = NULL;
@@ -152,37 +155,46 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
       if (found_index < 0){
         for (int i = 0; i < num_states && found_index < 0; i++){
           if (*(states + i) == NULL){
-            printf("Making new %s %d\n", token, i);//~~~~~~~~~~~~~~~~~~~~~~~~~
+                  printf("making new\n");
+
+            //printf("Making new %s %d\n", token, i);//~~~~~~~~~~~~~~~~~~~~~~~~~
             *(states + i) = calloc(1, sizeof(struct climate_info));
             found_index = i;
+            (*states + found_index)->num_records = 0;
+            (*states + found_index)->sum_temp = 0;
+            (*states + found_index)->max_temp = 0;
+            (*states + found_index)->min_temp = 0;
+            (*states + found_index)->sum_humidity = 0;
+            (*states + found_index)->sum_snow = 0;
+            (*states + found_index)->sum_cloud = 0;
+            (*states + found_index)->sum_strikes = 0;
             //(*states + found_index)->num_records = (unsigned long) calloc(1, sizeof(unsigned long));
             //(*states + found_index)->sum_temp = (long) calloc(1, sizeof(long));
             //(*states + found_index)->max_temp = (long) calloc(1, sizeof(long));
-            (*states + found_index)->max_temp_time = (char*) calloc(30, sizeof(char));
-            (*states + found_index)->min_temp = (long) calloc(1, sizeof(long));
-            (*states + found_index)->min_temp_time = (char*) calloc(30, sizeof(char));
+            (*states + found_index)->max_temp_time = calloc(30, sizeof(char));
+            //(*states + found_index)->min_temp = (long) calloc(1, sizeof(double));
+            (*states + found_index)->min_temp_time = calloc(30, sizeof(char));
             //(*states + found_index)->sum_humidity = (long) calloc(1, sizeof(long));
             //(*states + found_index)->sum_strikes = (long) calloc(1, sizeof(unsigned long));
             //(*states + found_index)->sum_snow = (long) calloc(1, sizeof(long));
             //(*states + found_index)->sum_cloud = (long) calloc(1, sizeof(long));
             strcpy((*states + found_index)->code, token);
-            printf("%s\n", (*states + found_index)->code);
-            printf("Success\n");
+                  printf("success\n");
+
+            //printf("Success\n");
           }
         }
       }
 
+      (*states + found_index)->num_records+= 1;
       token = strtok_r(NULL, " \t\n", &rest);
       //time
       temp_time = token;
-
       token = strtok_r(NULL, " \t\n", &rest);
       //geolocation will be skipped
-
       token = strtok_r(NULL, " \t\n", &rest);
       //humidity
       (*states + found_index)->sum_humidity += atol(token);
-
 
       token = strtok_r(NULL, " \t\n", &rest);
       //snow
@@ -190,7 +202,6 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
         (*states + found_index)->sum_snow+= 1;
 
       }
-
       token = strtok_r(NULL, " \t\n", &rest);
       //cloud
       (*states + found_index)->sum_cloud += atol(token);
@@ -201,28 +212,28 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
       if (atol(token)) {
         (*states + found_index)->sum_strikes+= 1;
       }
-
       token = strtok_r(NULL, " \t\n", &rest);
       //pressure will be skipped
-
       token = strtok_r(NULL, " \t\n", &rest);
       //surface temp
       double temp_kelvin = KtoF(atol(token));
+      //printf("success1\n");
+      char* string_time = timeToString(temp_time);
+      //printf("success2\n");
       (*states + found_index)->sum_temp += temp_kelvin;
       if (temp_kelvin > (*states + found_index)->max_temp){
-        (*states + found_index)->max_temp = temp_kelvin;
-        (*states + found_index)->max_temp_time = timeToString(temp_time);
-        printf("BIG %lf\n", temp_kelvin);
-        printf("%s", timeToString(temp_time));
+        (*states + found_index)-> max_temp = temp_kelvin;
+        
+        strcpy((*states + found_index)-> max_temp_time, string_time);
+        //printf("BIG %lf\n", temp_kelvin);
+        //printf("%s", timeToString(temp_time));
       }
-      else if (temp_kelvin < (*states + found_index)->min_temp){
-        (*states + found_index)->min_temp = temp_kelvin;
-        (*states + found_index)->min_temp_time = timeToString(temp_time);
+      if (temp_kelvin < (*states + found_index)->min_temp){
+        (*states + found_index)-> min_temp = temp_kelvin;
+        strcpy((*states + found_index)-> min_temp_time, string_time);
         //printf("SMALL %lf\n", temp_kelvin);
         //printf("%s", timeToString(temp_time));
       }
-
-      (*states + found_index)->num_records+= 1;
       /* TODO: We need to do a few things here:
         *
         *       * Tokenize the line.
@@ -235,6 +246,7 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
         *       * Update the climate_info structure as necessary.
         */
     }
+    printf("END\n");
 }
 
 void print_report(struct climate_info *states[], int num_states) {
@@ -249,18 +261,20 @@ void print_report(struct climate_info *states[], int num_states) {
 
     /* TODO: Print out the summary for each state. See format above. */
 
-    for (int i = 0; i < num_states && states[i] != NULL; i++) {
-        printf("--State : %s--\n", (*states + i)->code);
-        printf("Number of Records : %ld\n", (*states + i)->num_records);
-        printf("Average Humidity : %.1f%%\n", (double) (*states + i)->sum_humidity/(*states + i)->num_records);
-        printf("Average Temperature : %.1fF\n", (double) (*states + i)->sum_temp/(*states + i)->num_records);
-        printf("Max Temperature : %.1fF\n", (double) (*states + i)->max_temp);
-        printf("Max Temperature on : %s\n", (*states + i)->max_temp_time);
-        printf("Min Temperature : %.1fF\n", (double) (*states + i)->min_temp);
-        printf("Min Temperature on : %s\n", (*states + i)->min_temp_time);
-        printf("Lightning Strikes : %.lu\n", (*states + i)->sum_strikes);
-        printf("Records with Snow Cover : %.lu\n", (*states + i)->sum_snow);
-        printf("Average Cloud Cover : %.1f%%\n", (double) (*states + i) ->sum_cloud/(*states + i)->num_records);
+    for (int i = 0; i < num_states; i++) {
+      if (states[i] != NULL){
+        printf("--State: %s--\n", (*states + i)->code);
+        printf("Number of Records: %ld\n", (*states + i)->num_records);
+        printf("Average Humidity: %.1f%%\n", (double) (*states + i)->sum_humidity/(*states + i)->num_records);
+        printf("Average Temperature: %.1fF\n", (double) (*states + i)->sum_temp/(*states + i)->num_records);
+        printf("Max Temperature: %.1fF\n", (double) (*states + i)->max_temp);
+        printf("Max Temperature on: %s\n", (*states + i)->max_temp_time);
+        printf("Min Temperature: %.1fF\n", (double) (*states + i)->min_temp);
+        printf("Min Temperature on: %s\n", (*states + i)->min_temp_time);
+        printf("Lightning Strikes: %.lu\n", (*states + i)->sum_strikes);
+        printf("Records with Snow Cover: %.lu\n", (*states + i)->sum_snow);
+        printf("Average Cloud Cover: %.1f%%\n", (double) (*states + i) ->sum_cloud/(*states + i)->num_records);
+      }
     }
 }
 
@@ -269,8 +283,10 @@ double KtoF(double K) {
 }
 
 char* timeToString(char* time) {
-    time_t timestamp = (time_t)(atol(time) / 1000);
-    char* timestamp_string = (char*)malloc(30 * sizeof(char));
-    timestamp_string = ctime(&timestamp);
-    return timestamp_string;
+    time_t timestamp = atol(time) / 1000;
+    char* timestamp_string = calloc(40, sizeof(char));
+    strcpy(timestamp_string, ctime(&timestamp));
+    //printf("here3\n");
+    return strtok(timestamp_string, "\n");
+    //strips trailing newline that is added by ctime
 }
