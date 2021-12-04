@@ -242,7 +242,6 @@ void analyze_file(FILE *file, struct climate_info **states, int num_states){
         *       * Update the climate_info structure as necessary.
         */
     }
-    printf("END\n");
 }
 
 void print_report(struct climate_info *states[], int num_states) {
@@ -259,7 +258,7 @@ void print_report(struct climate_info *states[], int num_states) {
 
     for (int i = 0; i < num_states; i++) {
       if (states[i] != NULL){
-        printf("--State: %s--\n", (*states + i)->code);
+        printf("-- State: %s --\n", (*states + i)->code);
         printf("Number of Records: %ld\n", (*states + i)->num_records);
         printf("Average Humidity: %.1f%%\n", (double) (*states + i)->sum_humidity/(*states + i)->num_records);
         printf("Average Temperature: %.1fF\n", (double) (*states + i)->sum_temp/(*states + i)->num_records);
