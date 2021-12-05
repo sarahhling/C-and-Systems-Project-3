@@ -98,7 +98,7 @@ double KtoF(double K);
 int main(int argc, char *argv[]) 
 {
   //Program must read at least 1 file to be able to run  
-  if (argc < 1){
+  if (argc < 2){
     printf("At least 1 file must be opened!\n");
     return EXIT_FAILURE;
   }
