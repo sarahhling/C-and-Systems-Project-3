@@ -143,12 +143,12 @@ void Insert(struct list_s* list_p, char string[]) {
   } else {
     struct list_node_s* curr_p = list_p->h_p;
 
-    while(curr_p->next_p != NULL && strcmp(new_p->data, curr_p->data) > 0)
+    while(curr_p->next_p != NULL && strcmp(new_p->data, curr_p->data) >= 0)
     {
       curr_p = curr_p->next_p;
     }
 
-    if (curr_p->prev_p == NULL && strcmp(new_p->data, curr_p->data) < 0){
+    if (curr_p->prev_p == NULL && strcmp(new_p->data, curr_p->data) <= 0){
       curr_p->prev_p = new_p;
       new_p->next_p = curr_p;
       list_p->h_p = new_p;
@@ -236,15 +236,28 @@ void Free_node(struct list_node_s* node_p) {
  */
 void Delete(struct list_s* list_p, char string[]) {
 
-//TODO: Complete me
   int found = 0;
   struct list_node_s* curr_p = list_p->h_p;
-  while(curr_p != NULL)
+  while(curr_p != NULL && !found)
   {
-    if (!strcmp(curr_p->next_p->data, string)){
-      struct list_node_s* temp_p = curr_p->next_p;
-      curr_p->next_p = curr_p->next_p->next_p;
-      temp_p->next_p->prev_p = curr_p;
+    if (!strcmp(curr_p->data, string)){
+      if (curr_p->prev_p == NULL && curr_p->next_p == NULL){
+        Free_list(list_p);
+      }
+      if (curr_p->prev_p == NULL){
+        curr_p->next_p->prev_p = NULL;
+        list_p->h_p = curr_p->next_p;
+      }
+      else if (curr_p->next_p == NULL){
+        struct list_node_s* temp_p = curr_p->next_p;
+        curr_p->prev_p->next_p = NULL;
+        list_p->t_p = curr_p->prev_p;
+      }  else {
+        struct list_node_s* temp_p = curr_p->next_p;
+        temp_p->prev_p = curr_p->prev_p;
+        curr_p->prev_p->next_p = temp_p;
+      }
+      Free_node(curr_p);
       found = 1;
     }
     curr_p = curr_p->next_p;
