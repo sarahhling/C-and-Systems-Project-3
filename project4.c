@@ -152,14 +152,15 @@ void Insert(struct list_s* list_p, char string[]) {
       curr_p->prev_p = new_p;
       new_p->next_p = curr_p;
       list_p->h_p = new_p;
-    } else if (curr_p->next_p == NULL) {
+    } else if (curr_p->next_p == NULL && strcmp(new_p->data, curr_p->data) < 0) {
       curr_p->next_p = new_p;
       new_p->prev_p = curr_p;
       list_p->t_p = new_p;
     } else {
-      curr_p -> prev_p = new_p;
-      curr_p->prev_p->next_p = new_p;
-      new_p-> prev_p = curr_p->prev_p;
+      struct list_node_s* temp_p = curr_p->prev_p;
+      curr_p->prev_p = new_p;
+      temp_p->next_p = new_p;
+      new_p-> prev_p = temp_p;
       new_p->next_p = curr_p;
     }
 
