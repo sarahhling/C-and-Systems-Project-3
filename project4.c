@@ -122,7 +122,6 @@ struct list_node_s* Allocate_node(int size) {
   new_node->next_p = NULL;
 
   return new_node;
-//TODO: Complete me
 }  /* Allocate_node */
 
 
@@ -135,8 +134,13 @@ struct list_node_s* Allocate_node(int size) {
  *                and return, leaving list unchanged
  */
 void Insert(struct list_s* list_p, char string[]) {
-  struct list_node_s* new_p = Allocate_node(strlen(string) + 1);
-  strcat(new_p->data, string); 
+  int allocate_size = strlen(string) < 99 ? strlen(string) + 1 : 100;
+  struct list_node_s* new_p = Allocate_node(allocate_size);
+  if (new_p == NULL){
+    printf("An error occured. No changes were made\n");
+    return;
+  }
+  strncpy(new_p->data, string, allocate_size - 1); 
   if (list_p->h_p == NULL && list_p->t_p == NULL){
     list_p->h_p = new_p;
     list_p->t_p = list_p->h_p;
@@ -166,9 +170,7 @@ void Insert(struct list_s* list_p, char string[]) {
       new_p-> prev_p = temp_p;
       new_p->next_p = curr_p;
     }
-
   }
-//TODO: Complete me
 
 }  /* Insert */
 
@@ -242,9 +244,9 @@ void Delete(struct list_s* list_p, char string[]) {
   {
     if (!strcmp(curr_p->data, string)){
       if (curr_p->prev_p == NULL && curr_p->next_p == NULL){
-        Free_list(list_p);
-      }
-      if (curr_p->prev_p == NULL){
+        list_p->h_p = NULL;
+        list_p->t_p = NULL;
+      } else if (curr_p->prev_p == NULL){
         curr_p->next_p->prev_p = NULL;
         list_p->h_p = curr_p->next_p;
       }
@@ -273,11 +275,8 @@ void Delete(struct list_s* list_p, char string[]) {
  * In/out arg: list_p = pointers to head and tail of list
  */
 void Free_list(struct list_s* list_p) {
-  Free_node(list_p->h_p);
-  if (list_p->t_p != NULL){
-      Free_node(list_p->t_p);
-  }
-//TODO: Complete me
+  list_p->h_p = list_p->t_p = NULL;
+
 }  /* Free_list */
 
 
